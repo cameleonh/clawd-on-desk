@@ -111,7 +111,7 @@ hooks/
   clawd-hook.js  # Claude Code hook script (zero deps, 1s timeout)
   install.js     # Safe hook registration into ~/.claude/settings.json
 assets/
-  svg/           # 37 pixel-art SVG animations with CSS keyframes (incl. 6 mini mode)
+  svg/           # 39 pixel-art SVG animations with CSS keyframes (incl. 8 mini mode)
   gif/           # Recorded GIFs for documentation
 ```
 

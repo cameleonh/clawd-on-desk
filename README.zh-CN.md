@@ -111,7 +111,7 @@ hooks/
   clawd-hook.js  # Claude Code hook 脚本（零依赖，1 秒超时）
   install.js     # 安全注册 hook 到 ~/.claude/settings.json
 assets/
-  svg/           # 37 个像素风 SVG 动画（含 6 个极简模式，CSS 关键帧驱动）
+  svg/           # 39 个像素风 SVG 动画（含 8 个极简模式，CSS 关键帧驱动）
   gif/           # 录制的 GIF（用于文档展示）
 ```
 
