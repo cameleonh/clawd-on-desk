@@ -27,6 +27,7 @@ docs/*
 !docs/known-limitations.md
 !docs/known-limitations.zh-CN.md
 !docs/PRD.md
+!docs/CONTRIBUTING.md
 
 # Temp files from testing
 .tmp_*
