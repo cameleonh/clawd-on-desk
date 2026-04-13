@@ -1,6 +1,70 @@
-# CLAUDE.md
+# Clawd on Desk — Developer Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> 中文版在下方 (Chinese version below).
+
+## Project Overview
+
+Clawd on Desk — an Electron desktop pet that detects AI coding agent state in real-time via hooks and log polling, and plays corresponding pixel-art SVG animations. Supports **Claude Code** (command + HTTP hooks), **Codex CLI** (JSONL log polling), **Copilot CLI** (command hooks), **Cursor Agent** (`~/.cursor/hooks.json`, stdin/stdout JSON), **Gemini CLI** (session JSON polling), **Kiro CLI** (agent config hooks), and **opencode** (in-process plugin + reverse HTTP bridge). Supports Windows, macOS, and Linux.
+
+## Common Commands
+
+```bash
+npm start                     # Start Electron app (dev mode)
+npm run build                 # electron-builder Windows NSIS installer
+npm run build:mac             # electron-builder macOS DMG (x64 + arm64)
+npm run build:linux           # electron-builder Linux AppImage + deb
+npm run build:all             # Build all platforms simultaneously
+npm install                   # Install dependencies (electron + electron-builder)
+node hooks/install.js         # Register Claude Code hooks to ~/.claude/settings.json
+npm run install:cursor-hooks  # Register Cursor Agent hooks to ~/.cursor/hooks.json
+npm run install:gemini-hooks  # Register Gemini CLI hooks to ~/.gemini/settings.json
+npm run install:kiro-hooks    # Register Kiro CLI hooks to ~/.kiro/agents/
+npm test                      # Run unit tests (node --test test/*.test.js)
+```
+
+Manual state testing:
+```bash
+curl -X POST http://127.0.0.1:23333/state \
+  -H "Content-Type: application/json" \
+  -d '{"state":"working","svg":"clawd-working-building.svg"}'
+```
+
+## Architecture
+
+### Data Flow
+
+All agents feed into the same state machine via HTTP POST:
+```
+Agent event → Hook script / Log monitor → HTTP POST 127.0.0.1:23333/state
+  → src/server.js routes → src/state.js (multi-session + priority + min display + sleep)
+  → IPC state-change → src/renderer.js (SVG preload + crossfade + eye tracking)
+```
+
+### Dual-Window Architecture
+
+- **Render window**: Transparent, `setIgnoreMouseEvents(true)`, displays SVG + eye tracking
+- **Input window**: Small hitbox via `setShape`, `focusable: true`, receives pointer events
+- Input → IPC → main (moves both windows) → render (plays reactions)
+
+### Agent Config Modules (`agents/`)
+
+Each agent exports: event mapping, process names, capability flags.
+
+### Key Files
+
+| File | Responsibility |
+|------|---------------|
+| `src/main.js` | Electron main: windows, IPC, lifecycle, preferences |
+| `src/state.js` | State machine: multi-session, priority, sleep, DND |
+| `src/server.js` | HTTP server: /state, /permission, port discovery |
+| `src/permission.js` | Permission bubbles: create, stack, decide |
+| `src/renderer.js` | Render process: SVG switching, eye tracking |
+| `src/mini.js` | Mini mode: edge snap, peek, parabolic jump |
+| `src/tick.js` | 50ms main loop: cursor poll, idle detection, eye calc |
+| `src/menu.js` | Menus: i18n, right-click, tray, language switch |
+
+---
 
 ## 项目概述
 
