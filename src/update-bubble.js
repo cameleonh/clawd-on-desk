@@ -1,4 +1,7 @@
-const { BrowserWindow } = require("electron");
+let BrowserWindow;
+try {
+  ({ BrowserWindow } = require("electron"));
+} catch (_) {}
 const path = require("path");
 
 const isLinux = process.platform === "linux";

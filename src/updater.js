@@ -2,7 +2,8 @@ const https = require("https");
 const { execFile } = require("child_process");
 const path = require("path");
 const fs = require("fs");
-const electron = require("electron");
+let electron = {};
+try { electron = require("electron"); } catch (_) {}
 
 const isMac = process.platform === "darwin";
 
