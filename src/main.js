@@ -426,6 +426,8 @@ const _permCtx = {
     const s = sessions.get(sessionId);
     if (s && s.sourcePid) focusTerminalWindow(s.sourcePid, s.cwd, s.editor, s.pidChain);
   },
+  get shortcutAllow() { return _settingsController.get("shortcutAllow"); },
+  get shortcutDeny() { return _settingsController.get("shortcutDeny"); },
 };
 const _perm = require("./permission")(_permCtx);
 const { showPermissionBubble, resolvePermissionEntry, sendPermissionResponse, repositionBubbles, permLog, PASSTHROUGH_TOOLS, showCodexNotifyBubble, clearCodexNotifyBubbles, syncPermissionShortcuts, replyOpencodePermission } = _perm;
@@ -828,6 +830,11 @@ function wireSettingsSubscribers() {
     if ("hideBubbles" in changes) {
       try { syncPermissionShortcuts(); } catch (err) {
         console.warn("Clawd: syncPermissionShortcuts failed:", err && err.message);
+      }
+    }
+    if ("shortcutAllow" in changes || "shortcutDeny" in changes) {
+      try { syncPermissionShortcuts(); } catch (err) {
+        console.warn("Clawd: shortcut sync failed:", err && err.message);
       }
     }
     if ("bubbleFollowPet" in changes) {

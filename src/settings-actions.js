@@ -222,6 +222,10 @@ const updateRegistry = {
   // ── Theme ──
   theme: requireString("theme"),
 
+  // ── Hotkey customization ──
+  shortcutAllow: requireString("shortcutAllow"),
+  shortcutDeny: requireString("shortcutDeny"),
+
   // ── Phase 2/3 placeholders — schema reserves these so applyUpdate accepts them ──
   agents: requirePlainObject("agents"),
   themeOverrides: requirePlainObject("themeOverrides"),

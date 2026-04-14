@@ -403,6 +403,21 @@ html, body {
   background: var(--badge-bg, #333);
   margin-top: 8px;
 }
+.hotkey-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color, #333); }
+.hotkey-label { font-size: 14px; color: var(--text-primary, #e0e0e0); }
+.hotkey-capture {
+  background: var(--bg-secondary, #2a2a2a); border: 1px solid var(--border-color, #333); border-radius: 6px;
+  padding: 6px 16px; font-family: inherit; font-size: 13px; color: var(--text-primary, #e0e0e0);
+  cursor: pointer; min-width: 140px; text-align: center;
+}
+.hotkey-capture.capturing { border-color: var(--accent-color, #646cff); box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3); }
+.hotkey-capture:hover { border-color: var(--accent-color, #646cff); }
+.hotkey-reset {
+  margin-top: 16px; background: transparent; border: 1px solid var(--border-color, #333);
+  border-radius: 6px; padding: 6px 16px; font-family: inherit; font-size: 13px;
+  color: var(--text-secondary, #999); cursor: pointer;
+}
+.hotkey-reset:hover { border-color: var(--accent-color, #646cff); color: var(--text-primary, #e0e0e0); }
 
 /* ── Settings section shared ── */
 .settings-section h3 {

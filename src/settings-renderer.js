@@ -351,6 +351,24 @@ function renderAnimMapTab(container) {
   container.appendChild(section);
 }
 
+function formatAccelerator(accel) {
+  return accel
+    .replace(/CommandOrControl\+/g, "Ctrl+")
+    .replace(/\+/g, " + ");
+}
+
+function keyEventToAccelerator(e) {
+  const parts = [];
+  if (e.metaKey || e.ctrlKey) parts.push("CommandOrControl");
+  if (e.shiftKey) parts.push("Shift");
+  if (e.altKey) parts.push("Alt");
+  const key = e.key.toUpperCase();
+  if (["CONTROL", "SHIFT", "ALT", "META"].includes(key)) return null; // modifier-only
+  parts.push(key.length === 1 ? key : key);
+  if (parts.length < 2) return null;
+  return parts.join("+");
+}
+
 function renderShortcutsTab(container) {
   const section = document.createElement("div");
   section.className = "settings-section";
@@ -364,34 +382,70 @@ function renderShortcutsTab(container) {
   subtitle.textContent = t("shortcutsSubtitle");
   section.appendChild(subtitle);
 
+  const allowKey = snapshot.shortcutAllow || "CommandOrControl+Shift+Y";
+  const denyKey = snapshot.shortcutDeny || "CommandOrControl+Shift+N";
+
   const shortcuts = [
-    { action: t("shortcutAllow"), key: "Ctrl+Shift+Y" },
-    { action: t("shortcutDeny"), key: "Ctrl+Shift+N" },
+    { action: t("shortcutAllow"), field: "shortcutAllow", key: allowKey },
+    { action: t("shortcutDeny"), field: "shortcutDeny", key: denyKey },
   ];
 
-  const table = document.createElement("table");
+  const table = document.createElement("div");
   table.className = "shortcuts-table";
-  table.innerHTML =
-    `<thead><tr>` +
-    `<th>${escapeHtml(t("shortcutsAction"))}</th>` +
-    `<th>${escapeHtml(t("shortcutsKey"))}</th>` +
-    `</tr></thead>`;
 
-  const tbody = document.createElement("tbody");
   for (const s of shortcuts) {
-    const tr = document.createElement("tr");
-    tr.innerHTML =
-      `<td>${escapeHtml(s.action)}</td>` +
-      `<td><kbd>${escapeHtml(s.key)}</kbd></td>`;
-    tbody.appendChild(tr);
+    const row = document.createElement("div");
+    row.className = "hotkey-row";
+
+    const label = document.createElement("span");
+    label.className = "hotkey-label";
+    label.textContent = s.action;
+
+    const btn = document.createElement("button");
+    btn.className = "hotkey-capture";
+    btn.dataset.field = s.field;
+    btn.dataset.current = s.key;
+    btn.textContent = formatAccelerator(s.key);
+
+    btn.addEventListener("click", () => {
+      btn.classList.add("capturing");
+      btn.textContent = "...";
+
+      const handler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const accel = keyEventToAccelerator(e);
+        if (!accel) return;
+
+        btn.removeEventListener("keydown", handler);
+        btn.classList.remove("capturing");
+        btn.textContent = formatAccelerator(accel);
+        btn.dataset.current = accel;
+        window.settingsAPI.update(btn.dataset.field, accel);
+      };
+      btn.addEventListener("keydown", handler);
+      btn.addEventListener("blur", () => {
+        btn.removeEventListener("keydown", handler);
+        btn.classList.remove("capturing");
+        btn.textContent = formatAccelerator(btn.dataset.current);
+      }, { once: true });
+    });
+
+    row.appendChild(label);
+    row.appendChild(btn);
+    table.appendChild(row);
   }
-  table.appendChild(tbody);
   section.appendChild(table);
 
-  const note = document.createElement("p");
-  note.className = "settings-note";
-  note.textContent = t("shortcutNotCustomizable");
-  section.appendChild(note);
+  const resetBtn = document.createElement("button");
+  resetBtn.className = "hotkey-reset";
+  resetBtn.textContent = "Reset to Defaults";
+  resetBtn.addEventListener("click", () => {
+    window.settingsAPI.update("shortcutAllow", "CommandOrControl+Shift+Y");
+    window.settingsAPI.update("shortcutDeny", "CommandOrControl+Shift+N");
+    renderContent("shortcuts");
+  });
+  section.appendChild(resetBtn);
 
   container.appendChild(section);
 }
