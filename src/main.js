@@ -818,6 +818,11 @@ function wireSettingsSubscribers() {
     if ("hideBubbles" in changes) hideBubbles = changes.hideBubbles;
     if ("showSessionId" in changes) showSessionId = changes.showSessionId;
     if ("soundMuted" in changes) soundMuted = changes.soundMuted;
+    if ("theme" in changes) {
+      try { switchTheme(changes.theme); } catch (err) {
+        console.warn("Clawd: switchTheme failed:", err && err.message);
+      }
+    }
 
     // 2. Reactive side effects (mirror what the legacy setters / click handlers used to do).
     if ("hideBubbles" in changes) {
@@ -889,6 +894,15 @@ ipcMain.handle("settings:list-agents", () => {
     }));
   } catch (err) {
     console.warn("Clawd: settings:list-agents failed:", err && err.message);
+    return [];
+  }
+});
+
+ipcMain.handle("settings:list-themes", () => {
+  try {
+    return themeLoader.discoverThemes();
+  } catch (err) {
+    console.warn("Clawd: settings:list-themes failed:", err && err.message);
     return [];
   }
 });
