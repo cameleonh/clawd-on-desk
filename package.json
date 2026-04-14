@@ -12,6 +12,7 @@
     "test": "node --test test/*.test.js",
     "install:gemini-hooks": "node hooks/gemini-install.js",
     "install:cursor-hooks": "node hooks/cursor-install.js",
+    "install:copilot-hooks": "node hooks/copilot-install.js",
     "install:kiro-hooks": "node hooks/kiro-install.js"
   },
   "keywords": [

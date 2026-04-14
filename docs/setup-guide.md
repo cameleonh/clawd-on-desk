@@ -8,7 +8,7 @@
 
 **Codex CLI** — works out of the box. Clawd polls `~/.codex/sessions/` for JSONL logs automatically.
 
-**Copilot CLI** — requires manual hook setup. See [copilot-setup.md](copilot-setup.md) for instructions.
+**Copilot CLI** — hooks are auto-registered on launch (into `~/.copilot/hooks/hooks.json`). For manual setup, see [copilot-setup.md](copilot-setup.md).
 
 **Kiro CLI** — run `npm run install:kiro-hooks` if you want hooks registered before launching Clawd. Kiro's built-in `kiro_default` agent is not backed by an editable JSON file, so Clawd creates a custom `clawd` agent and re-syncs it from the latest `kiro_default` each time Clawd starts, then appends hooks. Use `kiro-cli --agent clawd` for a new chat, or `/agent swap clawd` inside an existing Kiro session, when you want hooks enabled. On macOS, state-driven animations have been verified; native terminal permission prompts such as `t / y / n` still need to be answered in the terminal.
 
