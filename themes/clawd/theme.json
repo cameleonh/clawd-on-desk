@@ -144,6 +144,25 @@
     "confirm":  "confirm.mp3"
   },
 
+  "transitions": {
+    "clawd-idle-look.svg":           { "out": 400 },
+    "clawd-idle-reading.svg":        { "out": 600 },
+    "clawd-working-debugger.svg":    { "out": 600 },
+    "clawd-working-thinking.svg":    { "in": 200, "out": 300 },
+    "clawd-working-typing.svg":      { "in": 150, "out": 300 },
+    "clawd-working-juggling.svg":    { "in": 150, "out": 300 },
+    "clawd-working-building.svg":    { "in": 150, "out": 300 },
+    "clawd-working-conducting.svg":  { "in": 150, "out": 300 },
+    "clawd-working-sweeping.svg":    { "in": 200, "out": 400 },
+    "clawd-working-carrying.svg":    { "in": 200, "out": 400 },
+    "clawd-happy.svg":               { "in": 300, "out": 800 },
+    "clawd-error.svg":               { "in": 200, "out": 500 },
+    "clawd-notification.svg":        { "in": 200, "out": 600 },
+    "clawd-idle-yawn.svg":           { "in": 300 },
+    "clawd-wake.svg":                { "out": 300 },
+    "clawd-collapse-sleep.svg":      { "in": 400 }
+  },
+
   "objectScale": {
     "widthRatio":  1.9,
     "heightRatio": 1.3,
