@@ -900,7 +900,17 @@ ipcMain.handle("settings:list-agents", () => {
 
 ipcMain.handle("settings:list-themes", () => {
   try {
-    return themeLoader.discoverThemes();
+    const themes = themeLoader.discoverThemes();
+    return themes.map(t => {
+      let idleSvg = null;
+      try {
+        const themeData = themeLoader.loadTheme(t.id);
+        if (themeData && themeData.states && themeData.states.idle) {
+          idleSvg = themeData.states.idle[0] || null;
+        }
+      } catch {}
+      return { ...t, idleSvg };
+    });
   } catch (err) {
     console.warn("Clawd: settings:list-themes failed:", err && err.message);
     return [];

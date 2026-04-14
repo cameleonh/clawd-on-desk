@@ -225,7 +225,11 @@ function renderThemeTab(container) {
     for (const theme of themes) {
       const card = document.createElement("div");
       card.className = "theme-card" + (theme.id === currentTheme ? " active" : "");
+      const previewHtml = theme.idleSvg
+        ? `<img src="../assets/svg/${escapeHtml(theme.idleSvg)}" class="theme-card-preview" alt="" onerror="this.style.display='none'" />`
+        : "";
       card.innerHTML =
+        previewHtml +
         `<div class="theme-card-name">${escapeHtml(theme.name)}</div>` +
         `<div class="theme-card-id">${escapeHtml(theme.id)}</div>` +
         (theme.builtin ? `<span class="theme-card-badge">${escapeHtml(t("themeBuiltin"))}</span>` : "");
