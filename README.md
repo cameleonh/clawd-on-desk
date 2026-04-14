@@ -137,7 +137,7 @@ Some things we'd like to explore in the future:
 - Codex terminal focus via process tree lookup from `codex.exe` PID
 - ~~Auto-registration of Copilot CLI hooks~~ (done — auto-registered on launch)
 - Theme registry and in-app download
-- Hook uninstall script for clean app removal
+- ~~Hook uninstall script~~ (done — `npm run uninstall`)
 
 ## Contributing
 
