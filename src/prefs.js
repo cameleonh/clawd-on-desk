@@ -64,6 +64,9 @@ const SCHEMA = {
   soundMuted: { type: "boolean", default: false },
   // Theme
   theme: { type: "string", default: "clawd" },
+  // Hotkey customization
+  shortcutAllow: { type: "string", default: "CommandOrControl+Shift+Y" },
+  shortcutDeny: { type: "string", default: "CommandOrControl+Shift+N" },
   // Phase 2/3 placeholders — schema reserves the keys so future migrations don't need v2.
   agents: {
     type: "object",

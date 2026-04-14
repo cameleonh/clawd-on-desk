@@ -51,11 +51,30 @@ const STRINGS = {
     rowHideBubblesDesc: "Suppress permission, notification, and update bubbles entirely.",
     rowShowSessionId: "Show session ID",
     rowShowSessionIdDesc: "Append the short session ID to bubble headers and the Sessions menu.",
-    placeholderTitle: "Coming soon",
-    placeholderDesc: "This panel will land in a future Clawd release. The plan lives in docs/plan-settings-panel.md.",
     toastSaveFailed: "Couldn't save: ",
     langEnglish: "English",
     langChinese: "中文",
+    themeTabTitle: "Theme",
+    themeTabSubtitle: "Choose the character that keeps you company while you code.",
+    themeBuiltin: "Built-in",
+    aboutTabTitle: "About Clawd on Desk",
+    aboutVersion: "Version",
+    aboutDescription: "A desktop pet that reacts to your AI coding agents in real-time.",
+    aboutRepo: "GitHub Repository",
+    aboutLicense: "License",
+    aboutAgents: "Supported Agents",
+    animMapTitle: "Animation Map",
+    animMapSubtitle: "How agent events map to pet animations.",
+    animMapEvent: "Event",
+    animMapState: "State",
+    animMapAnimation: "Animation",
+    shortcutsTitle: "Keyboard Shortcuts",
+    shortcutsSubtitle: "Current hotkey bindings. Customization coming in a future update.",
+    shortcutsAction: "Action",
+    shortcutsKey: "Shortcut",
+    shortcutAllow: "Allow latest permission bubble",
+    shortcutDeny: "Deny latest permission bubble",
+    shortcutNotCustomizable: "Not customizable yet",
   },
   zh: {
     settingsTitle: "设置",
@@ -93,11 +112,30 @@ const STRINGS = {
     rowHideBubblesDesc: "完全屏蔽权限、通知和更新气泡。",
     rowShowSessionId: "显示会话 ID",
     rowShowSessionIdDesc: "在气泡标题和会话菜单后追加短会话 ID。",
-    placeholderTitle: "即将推出",
-    placeholderDesc: "此面板将在 Clawd 后续版本中加入，规划见 docs/plan-settings-panel.md。",
     toastSaveFailed: "保存失败：",
     langEnglish: "English",
     langChinese: "中文",
+    themeTabTitle: "主题",
+    themeTabSubtitle: "选择陪你编程的桌宠角色。",
+    themeBuiltin: "内置",
+    aboutTabTitle: "关于 Clawd on Desk",
+    aboutVersion: "版本",
+    aboutDescription: "实时感知 AI 编程助手状态并播放动画的桌面宠物。",
+    aboutRepo: "GitHub 仓库",
+    aboutLicense: "许可证",
+    aboutAgents: "支持的 Agent",
+    animMapTitle: "动画映射",
+    animMapSubtitle: "Agent 事件如何映射到桌宠动画。",
+    animMapEvent: "事件",
+    animMapState: "状态",
+    animMapAnimation: "动画",
+    shortcutsTitle: "键盘快捷键",
+    shortcutsSubtitle: "当前快捷键绑定。自定义功能将在后续更新中推出。",
+    shortcutsAction: "操作",
+    shortcutsKey: "快捷键",
+    shortcutAllow: "允许最新权限气泡",
+    shortcutDeny: "拒绝最新权限气泡",
+    shortcutNotCustomizable: "暂不支持自定义",
   },
 };
 
@@ -135,10 +173,10 @@ function showToast(message, { error = false, ttl = 3500 } = {}) {
 const SIDEBAR_TABS = [
   { id: "general", icon: "\u2699", labelKey: "sidebarGeneral", available: true },
   { id: "agents", icon: "\u26A1", labelKey: "sidebarAgents", available: true },
-  { id: "theme", icon: "\u{1F3A8}", labelKey: "sidebarTheme", available: false },
-  { id: "animMap", icon: "\u{1F3AC}", labelKey: "sidebarAnimMap", available: false },
-  { id: "shortcuts", icon: "\u2328", labelKey: "sidebarShortcuts", available: false },
-  { id: "about", icon: "\u2139", labelKey: "sidebarAbout", available: false },
+  { id: "theme", icon: "\u{1F3A8}", labelKey: "sidebarTheme", available: true },
+  { id: "animMap", icon: "\u{1F3AC}", labelKey: "sidebarAnimMap", available: true },
+  { id: "shortcuts", icon: "\u2328", labelKey: "sidebarShortcuts", available: true },
+  { id: "about", icon: "\u2139", labelKey: "sidebarAbout", available: true },
 ];
 
 function renderSidebar() {
@@ -165,6 +203,253 @@ function renderSidebar() {
 }
 
 // ── Content ──
+function renderThemeTab(container) {
+  window.settingsAPI.listThemes().then((themes) => {
+    const section = document.createElement("div");
+    section.className = "settings-section";
+
+    const title = document.createElement("h3");
+    title.textContent = t("themeTabTitle");
+    section.appendChild(title);
+
+    const subtitle = document.createElement("p");
+    subtitle.className = "settings-subtitle";
+    subtitle.textContent = t("themeTabSubtitle");
+    section.appendChild(subtitle);
+
+    const grid = document.createElement("div");
+    grid.className = "theme-grid";
+
+    const currentTheme = snapshot.theme || "clawd";
+
+    for (const theme of themes) {
+      const card = document.createElement("div");
+      card.className = "theme-card" + (theme.id === currentTheme ? " active" : "");
+      const previewHtml = theme.idleSvg
+        ? `<img src="../assets/svg/${escapeHtml(theme.idleSvg)}" class="theme-card-preview" alt="" onerror="this.style.display='none'" />`
+        : "";
+      card.innerHTML =
+        previewHtml +
+        `<div class="theme-card-name">${escapeHtml(theme.name)}</div>` +
+        `<div class="theme-card-id">${escapeHtml(theme.id)}</div>` +
+        (theme.builtin ? `<span class="theme-card-badge">${escapeHtml(t("themeBuiltin"))}</span>` : "");
+      card.addEventListener("click", () => {
+        window.settingsAPI.update("theme", theme.id);
+      });
+      grid.appendChild(card);
+    }
+
+    section.appendChild(grid);
+    container.appendChild(section);
+  }).catch(() => {
+    const error = document.createElement("p");
+    error.className = "settings-error";
+    error.textContent = "Failed to load themes.";
+    container.appendChild(error);
+  });
+}
+
+function renderAboutTab(container) {
+  const section = document.createElement("div");
+  section.className = "settings-section";
+
+  const title = document.createElement("h3");
+  title.textContent = t("aboutTabTitle");
+  section.appendChild(title);
+
+  const version = document.createElement("div");
+  version.className = "about-row";
+  version.innerHTML = `<span class="about-label">${escapeHtml(t("aboutVersion"))}</span>` +
+    `<span class="about-value">0.5.10</span>`;
+  section.appendChild(version);
+
+  const desc = document.createElement("p");
+  desc.className = "settings-subtitle";
+  desc.textContent = t("aboutDescription");
+  section.appendChild(desc);
+
+  const links = document.createElement("div");
+  links.className = "about-links";
+  links.innerHTML =
+    `<a href="https://github.com/cameleonh/clawd-on-desk" target="_blank">${escapeHtml(t("aboutRepo"))}</a>` +
+    `<span class="about-separator">|</span>` +
+    `<span>${escapeHtml(t("aboutLicense"))}: MIT</span>`;
+  section.appendChild(links);
+
+  const agentsTitle = document.createElement("h4");
+  agentsTitle.textContent = t("aboutAgents");
+  section.appendChild(agentsTitle);
+
+  const agentsList = document.createElement("div");
+  agentsList.className = "about-agents";
+  const agents = [
+    "Claude Code", "Codex CLI", "Copilot CLI", "Cursor Agent",
+    "Gemini CLI", "Kiro CLI", "opencode"
+  ];
+  for (const name of agents) {
+    const badge = document.createElement("span");
+    badge.className = "about-agent-badge";
+    badge.textContent = name;
+    agentsList.appendChild(badge);
+  }
+  section.appendChild(agentsList);
+
+  container.appendChild(section);
+}
+
+function renderAnimMapTab(container) {
+  const section = document.createElement("div");
+  section.className = "settings-section";
+
+  const title = document.createElement("h3");
+  title.textContent = t("animMapTitle");
+  section.appendChild(title);
+
+  const subtitle = document.createElement("p");
+  subtitle.className = "settings-subtitle";
+  subtitle.textContent = t("animMapSubtitle");
+  section.appendChild(subtitle);
+
+  const map = [
+    { event: "SessionStart", state: "idle", animation: "clawd-idle-follow.svg" },
+    { event: "UserPromptSubmit", state: "thinking", animation: "clawd-working-thinking.svg" },
+    { event: "PreToolUse / PostToolUse (1)", state: "working", animation: "clawd-working-typing.svg" },
+    { event: "PreToolUse / PostToolUse (2)", state: "working", animation: "clawd-working-juggling.svg" },
+    { event: "PreToolUse / PostToolUse (3+)", state: "working", animation: "clawd-working-building.svg" },
+    { event: "SubagentStart (1)", state: "juggling", animation: "clawd-working-juggling.svg" },
+    { event: "SubagentStart (2+)", state: "conducting", animation: "clawd-working-conducting.svg" },
+    { event: "Stop", state: "attention", animation: "clawd-happy.svg" },
+    { event: "PostToolUseFailure", state: "error", animation: "clawd-error.svg" },
+    { event: "Notification", state: "notification", animation: "clawd-notification.svg" },
+    { event: "PermissionRequest", state: "notification", animation: "clawd-notification.svg + bubble" },
+    { event: "PreCompact", state: "sweeping", animation: "clawd-working-sweeping.svg" },
+    { event: "WorktreeCreate", state: "carrying", animation: "clawd-working-carrying.svg" },
+    { event: "60s idle", state: "sleeping", animation: "clawd-sleeping.svg" },
+  ];
+
+  const table = document.createElement("table");
+  table.className = "anim-map-table";
+  table.innerHTML =
+    `<thead><tr>` +
+    `<th>${escapeHtml(t("animMapEvent"))}</th>` +
+    `<th>${escapeHtml(t("animMapState"))}</th>` +
+    `<th>${escapeHtml(t("animMapAnimation"))}</th>` +
+    `</tr></thead>`;
+
+  const tbody = document.createElement("tbody");
+  for (const row of map) {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td>${escapeHtml(row.event)}</td>` +
+      `<td><span class="anim-state-badge">${escapeHtml(row.state)}</span></td>` +
+      `<td class="anim-file">${escapeHtml(row.animation)}</td>`;
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  section.appendChild(table);
+
+  container.appendChild(section);
+}
+
+function formatAccelerator(accel) {
+  return accel
+    .replace(/CommandOrControl\+/g, "Ctrl+")
+    .replace(/\+/g, " + ");
+}
+
+function keyEventToAccelerator(e) {
+  const parts = [];
+  if (e.metaKey || e.ctrlKey) parts.push("CommandOrControl");
+  if (e.shiftKey) parts.push("Shift");
+  if (e.altKey) parts.push("Alt");
+  const key = e.key.toUpperCase();
+  if (["CONTROL", "SHIFT", "ALT", "META"].includes(key)) return null; // modifier-only
+  parts.push(key.length === 1 ? key : key);
+  if (parts.length < 2) return null;
+  return parts.join("+");
+}
+
+function renderShortcutsTab(container) {
+  const section = document.createElement("div");
+  section.className = "settings-section";
+
+  const title = document.createElement("h3");
+  title.textContent = t("shortcutsTitle");
+  section.appendChild(title);
+
+  const subtitle = document.createElement("p");
+  subtitle.className = "settings-subtitle";
+  subtitle.textContent = t("shortcutsSubtitle");
+  section.appendChild(subtitle);
+
+  const allowKey = snapshot.shortcutAllow || "CommandOrControl+Shift+Y";
+  const denyKey = snapshot.shortcutDeny || "CommandOrControl+Shift+N";
+
+  const shortcuts = [
+    { action: t("shortcutAllow"), field: "shortcutAllow", key: allowKey },
+    { action: t("shortcutDeny"), field: "shortcutDeny", key: denyKey },
+  ];
+
+  const table = document.createElement("div");
+  table.className = "shortcuts-table";
+
+  for (const s of shortcuts) {
+    const row = document.createElement("div");
+    row.className = "hotkey-row";
+
+    const label = document.createElement("span");
+    label.className = "hotkey-label";
+    label.textContent = s.action;
+
+    const btn = document.createElement("button");
+    btn.className = "hotkey-capture";
+    btn.dataset.field = s.field;
+    btn.dataset.current = s.key;
+    btn.textContent = formatAccelerator(s.key);
+
+    btn.addEventListener("click", () => {
+      btn.classList.add("capturing");
+      btn.textContent = "...";
+
+      const handler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const accel = keyEventToAccelerator(e);
+        if (!accel) return;
+
+        btn.removeEventListener("keydown", handler);
+        btn.classList.remove("capturing");
+        btn.textContent = formatAccelerator(accel);
+        btn.dataset.current = accel;
+        window.settingsAPI.update(btn.dataset.field, accel);
+      };
+      btn.addEventListener("keydown", handler);
+      btn.addEventListener("blur", () => {
+        btn.removeEventListener("keydown", handler);
+        btn.classList.remove("capturing");
+        btn.textContent = formatAccelerator(btn.dataset.current);
+      }, { once: true });
+    });
+
+    row.appendChild(label);
+    row.appendChild(btn);
+    table.appendChild(row);
+  }
+  section.appendChild(table);
+
+  const resetBtn = document.createElement("button");
+  resetBtn.className = "hotkey-reset";
+  resetBtn.textContent = "Reset to Defaults";
+  resetBtn.addEventListener("click", () => {
+    window.settingsAPI.update("shortcutAllow", "CommandOrControl+Shift+Y");
+    window.settingsAPI.update("shortcutDeny", "CommandOrControl+Shift+N");
+    renderContent("shortcuts");
+  });
+  section.appendChild(resetBtn);
+
+  container.appendChild(section);
+}
+
 function renderContent() {
   const content = document.getElementById("content");
   content.innerHTML = "";
@@ -172,8 +457,14 @@ function renderContent() {
     renderGeneralTab(content);
   } else if (activeTab === "agents") {
     renderAgentsTab(content);
-  } else {
-    renderPlaceholder(content);
+  } else if (activeTab === "theme") {
+    renderThemeTab(content);
+  } else if (activeTab === "animMap") {
+    renderAnimMapTab(content);
+  } else if (activeTab === "shortcuts") {
+    renderShortcutsTab(content);
+  } else if (activeTab === "about") {
+    renderAboutTab(content);
   }
 }
 
@@ -282,16 +573,6 @@ function buildAgentSwitchRow({ agent, flag, extraClass, buildText }) {
   ctrl.appendChild(sw);
   row.appendChild(ctrl);
   return row;
-}
-
-function renderPlaceholder(parent) {
-  const div = document.createElement("div");
-  div.className = "placeholder";
-  div.innerHTML =
-    `<div class="placeholder-icon">\u{1F6E0}</div>` +
-    `<div class="placeholder-title">${escapeHtml(t("placeholderTitle"))}</div>` +
-    `<div class="placeholder-desc">${escapeHtml(t("placeholderDesc"))}</div>`;
-  parent.appendChild(div);
 }
 
 function renderGeneralTab(parent) {

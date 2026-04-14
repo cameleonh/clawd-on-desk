@@ -103,6 +103,18 @@ function syncCursorHooks() {
   }
 }
 
+function syncCopilotHooks() {
+  try {
+    const { registerCopilotHooks } = require("../hooks/copilot-install.js");
+    const { added, updated } = registerCopilotHooks({ silent: true });
+    if (added > 0 || updated > 0) {
+      console.log(`Clawd: synced Copilot hooks (added ${added}, updated ${updated})`);
+    }
+  } catch (err) {
+    console.warn("Clawd: failed to sync Copilot hooks:", err.message);
+  }
+}
+
 function syncOpencodePlugin() {
   try {
     const { registerOpencodePlugin } = require("../hooks/opencode-install.js");
@@ -532,6 +544,7 @@ function startHttpServer() {
       syncClawdHooks();
       syncGeminiHooks();
       syncCursorHooks();
+      syncCopilotHooks();
       syncCodeBuddyHooks();
       syncKiroHooks();
       syncOpencodePlugin();
@@ -548,7 +561,7 @@ function cleanup() {
   if (httpServer) httpServer.close();
 }
 
-return { startHttpServer, getHookServerPort, syncClawdHooks, syncGeminiHooks, syncCursorHooks, syncCodeBuddyHooks, syncKiroHooks, syncOpencodePlugin, cleanup };
+return { startHttpServer, getHookServerPort, syncClawdHooks, syncGeminiHooks, syncCursorHooks, syncCopilotHooks, syncCodeBuddyHooks, syncKiroHooks, syncOpencodePlugin, cleanup };
 
 };
 

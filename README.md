@@ -15,7 +15,7 @@ A desktop pet that reacts to your AI coding agent sessions in real-time. Clawd l
 ### Multi-Agent Support
 - **Claude Code** — full integration via command hooks + HTTP permission hooks
 - **Codex CLI** — automatic JSONL log polling (`~/.codex/sessions/`), no configuration needed
-- **Copilot CLI** — command hooks via `~/.copilot/hooks/hooks.json`
+- **Copilot CLI** — command hooks via `~/.copilot/hooks/hooks.json` (registered automatically when Clawd starts, or run `npm run install:copilot-hooks`)
 - **Gemini CLI** — command hooks via `~/.gemini/settings.json` (registered automatically when Clawd starts, or run `npm run install:gemini-hooks`)
 - **Cursor Agent** — [Cursor IDE hooks](https://cursor.com/docs/agent/hooks) in `~/.cursor/hooks.json` (registered automatically when Clawd starts, or run `npm run install:cursor-hooks`)
 - **Kiro CLI** — command hooks injected into custom agent configs under `~/.kiro/agents/`, plus an auto-created `clawd` agent that is re-synced from Kiro's built-in `kiro_default` whenever Clawd starts, so you can opt into hooks with minimal behavior drift via `kiro-cli --agent clawd` or `/agent swap clawd` (registered automatically when Clawd starts, or run `npm run install:kiro-hooks`). State hooks have been verified on macOS.
@@ -101,7 +101,7 @@ npm install
 npm start
 ```
 
-**Claude Code** and **Codex CLI** work out of the box. Other agents (Copilot, Kiro, etc.) need one-time setup. Also covers remote SSH, WSL, and platform-specific notes (macOS / Linux): **[docs/setup-guide.md](docs/setup-guide.md)**
+**Claude Code**, **Codex CLI**, **Copilot CLI**, **Gemini CLI**, **Cursor Agent**, **Kiro CLI**, and **opencode** all work out of the box — hooks are auto-registered when Clawd starts. For manual setup, remote SSH, WSL, and platform-specific notes (macOS / Linux): **[docs/setup-guide.md](docs/setup-guide.md)**
 
 ## Known Limitations
 
@@ -135,9 +135,9 @@ See [docs/guide-theme-creation.md](docs/guide-theme-creation.md) for the full cr
 Some things we'd like to explore in the future:
 
 - Codex terminal focus via process tree lookup from `codex.exe` PID
-- Auto-registration of Copilot CLI hooks (like we do for Claude Code)
+- ~~Auto-registration of Copilot CLI hooks~~ (done — auto-registered on launch)
 - Theme registry and in-app download
-- Hook uninstall script for clean app removal
+- ~~Hook uninstall script~~ (done — `npm run uninstall`)
 
 ## Contributing
 

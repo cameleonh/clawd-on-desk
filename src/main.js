@@ -426,6 +426,8 @@ const _permCtx = {
     const s = sessions.get(sessionId);
     if (s && s.sourcePid) focusTerminalWindow(s.sourcePid, s.cwd, s.editor, s.pidChain);
   },
+  get shortcutAllow() { return _settingsController.get("shortcutAllow"); },
+  get shortcutDeny() { return _settingsController.get("shortcutDeny"); },
 };
 const _perm = require("./permission")(_permCtx);
 const { showPermissionBubble, resolvePermissionEntry, sendPermissionResponse, repositionBubbles, permLog, PASSTHROUGH_TOOLS, showCodexNotifyBubble, clearCodexNotifyBubbles, syncPermissionShortcuts, replyOpencodePermission } = _perm;
@@ -818,11 +820,21 @@ function wireSettingsSubscribers() {
     if ("hideBubbles" in changes) hideBubbles = changes.hideBubbles;
     if ("showSessionId" in changes) showSessionId = changes.showSessionId;
     if ("soundMuted" in changes) soundMuted = changes.soundMuted;
+    if ("theme" in changes) {
+      try { switchTheme(changes.theme); } catch (err) {
+        console.warn("Clawd: switchTheme failed:", err && err.message);
+      }
+    }
 
     // 2. Reactive side effects (mirror what the legacy setters / click handlers used to do).
     if ("hideBubbles" in changes) {
       try { syncPermissionShortcuts(); } catch (err) {
         console.warn("Clawd: syncPermissionShortcuts failed:", err && err.message);
+      }
+    }
+    if ("shortcutAllow" in changes || "shortcutDeny" in changes) {
+      try { syncPermissionShortcuts(); } catch (err) {
+        console.warn("Clawd: shortcut sync failed:", err && err.message);
       }
     }
     if ("bubbleFollowPet" in changes) {
@@ -889,6 +901,25 @@ ipcMain.handle("settings:list-agents", () => {
     }));
   } catch (err) {
     console.warn("Clawd: settings:list-agents failed:", err && err.message);
+    return [];
+  }
+});
+
+ipcMain.handle("settings:list-themes", () => {
+  try {
+    const themes = themeLoader.discoverThemes();
+    return themes.map(t => {
+      let idleSvg = null;
+      try {
+        const themeData = themeLoader.loadTheme(t.id);
+        if (themeData && themeData.states && themeData.states.idle) {
+          idleSvg = themeData.states.idle[0] || null;
+        }
+      } catch {}
+      return { ...t, idleSvg };
+    });
+  } catch (err) {
+    console.warn("Clawd: settings:list-themes failed:", err && err.message);
     return [];
   }
 });
@@ -1508,7 +1539,7 @@ if (!gotTheLock) {
     // agent-gate snapshot — a user who disabled Codex at last shutdown
     // shouldn't see its file watcher spin up on the next launch.
     try {
-      const CodexLogMonitor = require("../agents/codex-log-monitor");
+      const { CodexLogMonitor } = require("../agents/codex-log-monitor");
       const codexAgent = require("../agents/codex");
       _codexMonitor = new CodexLogMonitor(codexAgent, (sid, state, event, extra) => {
         if (state === "codex-permission") {

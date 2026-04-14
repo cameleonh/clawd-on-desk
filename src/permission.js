@@ -1,7 +1,10 @@
 // src/permission.js — Permission bubble management (stacking, show/hide, responses)
 // Extracted from main.js L349-357, L1594-1746
 
-const { BrowserWindow, globalShortcut } = require("electron");
+let BrowserWindow, globalShortcut;
+try {
+  ({ BrowserWindow, globalShortcut } = require("electron"));
+} catch (_) {}
 const path = require("path");
 const http = require("http");
 const {
@@ -168,9 +171,9 @@ const PASSTHROUGH_TOOLS = new Set([
   "TaskCreate", "TaskUpdate", "TaskGet", "TaskList", "TaskStop", "TaskOutput",
 ]);
 
-// ── Permission hotkeys (Ctrl+Shift+Y = Allow, Ctrl+Shift+N = Deny) ──
-const HOTKEY_ALLOW = "CommandOrControl+Shift+Y";
-const HOTKEY_DENY  = "CommandOrControl+Shift+N";
+// ── Permission hotkeys — defaults, overridden by ctx.shortcutAllow/Deny ──
+const DEFAULT_ALLOW = "CommandOrControl+Shift+Y";
+const DEFAULT_DENY  = "CommandOrControl+Shift+N";
 let hotkeysRegistered = false;
 
 function getActionablePermissions() {
@@ -179,19 +182,24 @@ function getActionablePermissions() {
   );
 }
 
+function _getAllowKey() { return ctx.shortcutAllow || DEFAULT_ALLOW; }
+function _getDenyKey()  { return ctx.shortcutDeny  || DEFAULT_DENY; }
+
 function syncPermissionShortcuts() {
   const shouldRegister = !ctx.hideBubbles && !ctx.petHidden
     && getActionablePermissions().length > 0;
 
   if (shouldRegister && !hotkeysRegistered) {
     try {
-      const okAllow = globalShortcut.register(HOTKEY_ALLOW, hotkeyAllow);
-      const okDeny  = globalShortcut.register(HOTKEY_DENY,  hotkeyDeny);
+      const allowKey = _getAllowKey();
+      const denyKey  = _getDenyKey();
+      const okAllow = globalShortcut.register(allowKey, hotkeyAllow);
+      const okDeny  = globalShortcut.register(denyKey,  hotkeyDeny);
       hotkeysRegistered = okAllow || okDeny;
     } catch {}
   } else if (!shouldRegister && hotkeysRegistered) {
-    try { globalShortcut.unregister(HOTKEY_ALLOW); } catch {}
-    try { globalShortcut.unregister(HOTKEY_DENY);  } catch {}
+    try { globalShortcut.unregister(_getAllowKey()); } catch {}
+    try { globalShortcut.unregister(_getDenyKey());  } catch {}
     hotkeysRegistered = false;
   }
 }
@@ -655,8 +663,8 @@ function clearCodexNotifyBubbles(sessionId) {
 function cleanup() {
   // Unregister hotkeys
   if (hotkeysRegistered) {
-    try { globalShortcut.unregister(HOTKEY_ALLOW); } catch {}
-    try { globalShortcut.unregister(HOTKEY_DENY);  } catch {}
+    try { globalShortcut.unregister(_getAllowKey()); } catch {}
+    try { globalShortcut.unregister(_getDenyKey());  } catch {}
     hotkeysRegistered = false;
   }
   // Clean up all pending permission requests — send explicit deny so Claude Code doesn't hang

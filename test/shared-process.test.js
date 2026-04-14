@@ -4,6 +4,18 @@ const assert = require("node:assert");
 
 const { getPlatformConfig, createPidResolver, readStdinJson } = require("../hooks/shared-process");
 
+// wmic was removed in Windows 11 24H2+; skip PID-chain tests when unavailable
+const hasWmic = (() => {
+  if (process.platform !== "win32") return true;
+  try {
+    const { execFileSync } = require("child_process");
+    execFileSync("wmic", ["--version"], { encoding: "utf8", timeout: 3000, windowsHide: true });
+    return true;
+  } catch {
+    return false;
+  }
+})();
+
 // ═════════════════════════════════════════════════════════════════════════════
 // getPlatformConfig()
 // ═════════════════════════════════════════════════════════════════════════════
@@ -95,7 +107,7 @@ describe("createPidResolver()", () => {
     assert.ok(Array.isArray(result.pidChain));
   });
 
-  it("walks from startPid and populates pidChain", () => {
+  it("walks from startPid and populates pidChain", { skip: !hasWmic }, () => {
     const cfg = getPlatformConfig();
     const resolve = createPidResolver({ platformConfig: cfg, startPid: process.pid });
     const { pidChain } = resolve();
