@@ -309,8 +309,8 @@ Refer to [`docs/known-limitations.md`](known-limitations.md) for the complete ta
 ## 6. Roadmap
 
 ### v0.6.0 -- Documentation and Tests
-- Comprehensive English documentation (PRD, contributing guide, architecture docs)
-- Expand unit test coverage for core modules
+- ~~Comprehensive English documentation (PRD, contributing guide, architecture docs)~~
+- ~~Expand unit test coverage for core modules~~
 - Agent integration test harness
 
 ### v0.7.0 -- UX Polish
@@ -322,9 +322,9 @@ Refer to [`docs/known-limitations.md`](known-limitations.md) for the complete ta
 
 ### v0.8.0 -- New Features
 - Codex terminal focus via process tree lookup from `codex.exe` PID
-- Auto-registration of Copilot CLI hooks (like Claude Code)
+- ~~Auto-registration of Copilot CLI hooks (like Claude Code)~~
 - Theme registry and in-app download
-- Hook uninstall script for clean application removal
+- ~~Hook uninstall script for clean application removal~~
 
 ### v1.0.0 -- Production
 - Performance optimization and memory profiling
