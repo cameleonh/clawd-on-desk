@@ -26,6 +26,7 @@ module.exports = {
   capabilities: {
     httpHook: false,
     permissionApproval: false,
+    terminalFocus: true,
     // Read-only "Got it" notification, not an approval prompt — kept
     // separate from permissionApproval so UI doesn't mislabel it.
     interactiveBubble: true,

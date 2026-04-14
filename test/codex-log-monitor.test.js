@@ -3,7 +3,7 @@ const assert = require("node:assert");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
-const CodexLogMonitor = require("../agents/codex-log-monitor");
+const { CodexLogMonitor } = require("../agents/codex-log-monitor");
 const codexConfig = require("../agents/codex");
 
 // Helper: create a temp session dir with today's date structure

@@ -5,6 +5,7 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const { execFileSync } = require("child_process");
 
 const APPROVAL_HEURISTIC_MS = 2000;
 const MAX_TRACKED_FILES = 50;
@@ -196,6 +197,7 @@ class CodexLogMonitor {
         partial: "",
         hadToolUse: false,
         agentPid: null,
+        terminalPid: null,
       };
       this._tracked.set(filePath, tracked);
     }
@@ -294,9 +296,10 @@ class CodexLogMonitor {
       tracked.lastState = resolved;
       tracked.lastEventTime = Date.now();
       const agentPid = this._resolveTrackedAgentPid(tracked);
+      const terminalPid = this._resolveTerminalPid(tracked);
       this._onStateChange(tracked.sessionId, resolved, key, {
         cwd: tracked.cwd,
-        sourcePid: agentPid,
+        sourcePid: terminalPid || agentPid,
         agentPid,
       });
       return;
@@ -311,10 +314,11 @@ class CodexLogMonitor {
       if (cmd) {
         if (this._isExplicitApprovalRequest(payload)) {
           const agentPid = this._resolveTrackedAgentPid(tracked);
+          const terminalPid = this._resolveTerminalPid(tracked);
           tracked.lastEventTime = Date.now();
           this._onStateChange(tracked.sessionId, "codex-permission", key, {
             cwd: tracked.cwd,
-            sourcePid: agentPid,
+            sourcePid: terminalPid || agentPid,
             agentPid,
             permissionDetail: { command: cmd, rawPayload: payload },
           });
@@ -323,10 +327,11 @@ class CodexLogMonitor {
         tracked.approvalTimer = setTimeout(() => {
           tracked.approvalTimer = null;
           const agentPid = this._resolveTrackedAgentPid(tracked);
+          const terminalPid = this._resolveTerminalPid(tracked);
           tracked.lastEventTime = Date.now();
           this._onStateChange(tracked.sessionId, "codex-permission", key, {
             cwd: tracked.cwd,
-            sourcePid: agentPid,
+            sourcePid: terminalPid || agentPid,
             agentPid,
             permissionDetail: { command: cmd, rawPayload: payload },
           });
@@ -340,9 +345,10 @@ class CodexLogMonitor {
     tracked.lastEventTime = Date.now();
 
     const agentPid = this._resolveTrackedAgentPid(tracked);
+    const terminalPid = this._resolveTerminalPid(tracked);
     this._onStateChange(tracked.sessionId, state, key, {
       cwd: tracked.cwd,
-      sourcePid: agentPid,
+      sourcePid: terminalPid || agentPid,
       agentPid,
     });
   }
@@ -395,6 +401,21 @@ class CodexLogMonitor {
     return tracked.agentPid;
   }
 
+  _resolveTerminalPid(tracked) {
+    if (tracked.terminalPid && this._isProcessAlive(tracked.terminalPid)) {
+      return tracked.terminalPid;
+    }
+    const codexPids = findCodexProcessPids();
+    for (const pid of codexPids) {
+      const tPid = walkToTerminal(pid);
+      if (tPid) {
+        tracked.terminalPid = tPid;
+        return tPid;
+      }
+    }
+    return null;
+  }
+
   _isProcessAlive(pid) {
     try {
       process.kill(pid, 0);
@@ -444,9 +465,10 @@ class CodexLogMonitor {
       if (age > 300000) {
         // 5 min stale — notify session end and stop tracking
         if (tracked.approvalTimer) clearTimeout(tracked.approvalTimer);
+        const termPid = tracked.terminalPid && this._isProcessAlive(tracked.terminalPid) ? tracked.terminalPid : null;
         this._onStateChange(tracked.sessionId, "sleeping", "stale-cleanup", {
           cwd: tracked.cwd,
-          sourcePid: tracked.agentPid,
+          sourcePid: termPid || tracked.agentPid,
           agentPid: tracked.agentPid,
         });
         this._tracked.delete(filePath);
@@ -455,4 +477,134 @@ class CodexLogMonitor {
   }
 }
 
-module.exports = CodexLogMonitor;
+// ── Standalone PID helpers (outside class for testability) ──
+
+/**
+ * Find all running Codex CLI process PIDs.
+ * Windows: uses wmic to list codex.exe processes.
+ * macOS/Linux: uses pgrep -x codex.
+ * Returns number[] (empty on error or no codex running).
+ */
+function findCodexProcessPids() {
+  try {
+    if (process.platform === "win32") {
+      const out = execFileSync(
+        "wmic",
+        ["process", "where", "Name='codex.exe'", "get", "ProcessId", "/format:list"],
+        { encoding: "utf8", timeout: 5000, windowsHide: true }
+      );
+      const pids = [];
+      for (const line of out.split("\n")) {
+        const m = /^ProcessId=(\d+)/i.exec(line.trim());
+        if (m) pids.push(parseInt(m[1], 10));
+      }
+      return pids;
+    }
+    // macOS / Linux
+    const out = execFileSync("pgrep", ["-x", "codex"], {
+      encoding: "utf8", timeout: 3000,
+    });
+    const pids = [];
+    for (const line of out.split("\n")) {
+      const n = parseInt(line.trim(), 10);
+      if (n > 0) pids.push(n);
+    }
+    return pids;
+  } catch {
+    return []; // no codex running or tool unavailable
+  }
+}
+
+// Terminal process names that indicate a real user terminal window
+const TERMINAL_NAMES = new Set([
+  // Windows
+  "windowsterminal.exe", "cmd.exe", "powershell.exe", "pwsh.exe",
+  "alacritty.exe", "wezterm-gui.exe", "hyper.exe",
+  // macOS
+  "terminal", "iterm2", "alacritty", "kitty", "wezterm",
+  // Linux
+  "foot", "gnome-terminal", "tilix", "konsole",
+]);
+
+// System boundary processes — stop walking before escaping user session
+const SYSTEM_BOUNDARY = new Set([
+  // Windows
+  "explorer.exe", "csrss.exe", "services.exe", "wininit.exe", "svchost.exe",
+  // macOS / Linux
+  "launchd", "systemd", "init",
+]);
+
+// Codex binary names to skip through (walk past them)
+const CODEX_NAMES = new Set(["codex.exe", "codex"]);
+
+/**
+ * Walk up the process tree from startPid to find the outermost terminal process.
+ * Returns terminal PID or null.
+ * @param {number} startPid
+ * @param {object} [options]
+ * @param {number} [options.maxDepth=20]
+ */
+function walkToTerminal(startPid, options) {
+  if (!startPid || startPid <= 0 || !Number.isFinite(startPid)) return null;
+  const maxDepth = (options && options.maxDepth) || 20;
+  const isWin = process.platform === "win32";
+  let pid = startPid;
+  let terminalPid = null;
+
+  for (let i = 0; i < maxDepth && pid && pid > 1; i++) {
+    let name = "";
+    let parentPid = 0;
+    try {
+      if (isWin) {
+        const out = execFileSync(
+          "wmic",
+          ["process", "where", "ProcessId=" + pid, "get", "Name,ParentProcessId", "/format:list"],
+          { encoding: "utf8", timeout: 3000, windowsHide: true }
+        );
+        for (const line of out.split("\n")) {
+          const nameMatch = /^Name=(.+)/i.exec(line.trim());
+          if (nameMatch) name = nameMatch[1].trim().toLowerCase();
+          const ppidMatch = /^ParentProcessId=(\d+)/i.exec(line.trim());
+          if (ppidMatch) parentPid = parseInt(ppidMatch[1], 10) || 0;
+        }
+      } else {
+        // macOS / Linux: ps -o comm=,ppid= -p <pid>
+        const out = execFileSync("ps", ["-o", "comm=,ppid=", "-p", String(pid)], {
+          encoding: "utf8", timeout: 2000,
+        }).trim();
+        if (!out) break;
+        // Format: "command_name parent_pid" — comm may contain spaces
+        const lastSpace = out.lastIndexOf(" ");
+        if (lastSpace <= 0) break;
+        name = out.slice(0, lastSpace).trim().split("/").pop().toLowerCase();
+        parentPid = parseInt(out.slice(lastSpace + 1).trim(), 10) || 0;
+      }
+    } catch {
+      break; // process gone or tool unavailable
+    }
+
+    if (!name) break;
+
+    // Stop at system boundary
+    if (SYSTEM_BOUNDARY.has(name)) break;
+
+    // Record terminal match but keep walking for outermost (Electron terminals)
+    if (TERMINAL_NAMES.has(name)) {
+      terminalPid = pid;
+    }
+
+    // Skip through codex processes
+    if (CODEX_NAMES.has(name)) {
+      if (!parentPid || parentPid === pid || parentPid <= 1) break;
+      pid = parentPid;
+      continue;
+    }
+
+    if (!parentPid || parentPid === pid || parentPid <= 1) break;
+    pid = parentPid;
+  }
+
+  return terminalPid;
+}
+
+module.exports = { CodexLogMonitor, __test: { findCodexProcessPids, walkToTerminal } };
