@@ -51,8 +51,6 @@ const STRINGS = {
     rowHideBubblesDesc: "Suppress permission, notification, and update bubbles entirely.",
     rowShowSessionId: "Show session ID",
     rowShowSessionIdDesc: "Append the short session ID to bubble headers and the Sessions menu.",
-    placeholderTitle: "Coming soon",
-    placeholderDesc: "This panel will land in a future Clawd release. The plan lives in docs/plan-settings-panel.md.",
     toastSaveFailed: "Couldn't save: ",
     langEnglish: "English",
     langChinese: "中文",
@@ -114,8 +112,6 @@ const STRINGS = {
     rowHideBubblesDesc: "完全屏蔽权限、通知和更新气泡。",
     rowShowSessionId: "显示会话 ID",
     rowShowSessionIdDesc: "在气泡标题和会话菜单后追加短会话 ID。",
-    placeholderTitle: "即将推出",
-    placeholderDesc: "此面板将在 Clawd 后续版本中加入，规划见 docs/plan-settings-panel.md。",
     toastSaveFailed: "保存失败：",
     langEnglish: "English",
     langChinese: "中文",
@@ -411,8 +407,6 @@ function renderContent() {
     renderShortcutsTab(content);
   } else if (activeTab === "about") {
     renderAboutTab(content);
-  } else {
-    renderPlaceholder(content);
   }
 }
 
@@ -521,16 +515,6 @@ function buildAgentSwitchRow({ agent, flag, extraClass, buildText }) {
   ctrl.appendChild(sw);
   row.appendChild(ctrl);
   return row;
-}
-
-function renderPlaceholder(parent) {
-  const div = document.createElement("div");
-  div.className = "placeholder";
-  div.innerHTML =
-    `<div class="placeholder-icon">\u{1F6E0}</div>` +
-    `<div class="placeholder-title">${escapeHtml(t("placeholderTitle"))}</div>` +
-    `<div class="placeholder-desc">${escapeHtml(t("placeholderDesc"))}</div>`;
-  parent.appendChild(div);
 }
 
 function renderGeneralTab(parent) {
