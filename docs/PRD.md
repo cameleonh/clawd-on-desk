@@ -314,14 +314,14 @@ Refer to [`docs/known-limitations.md`](known-limitations.md) for the complete ta
 - Agent integration test harness
 
 ### v0.7.0 -- UX Polish
-- Settings panel redesign with theme preview
-- Hotkey configuration interface
+- Settings panel redesign with ~~theme preview~~
+- ~~Hotkey configuration interface~~
 - Accessibility options (reduced motion, high contrast)
 - Settings import/export
 - Language menu truncation investigation (Electron + Windows DWM limitation)
 
 ### v0.8.0 -- New Features
-- Codex terminal focus via process tree lookup from `codex.exe` PID
+- ~~Codex terminal focus via process tree lookup from `codex.exe` PID~~
 - ~~Auto-registration of Copilot CLI hooks (like Claude Code)~~
 - Theme registry and in-app download
 - ~~Hook uninstall script for clean application removal~~

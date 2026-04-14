@@ -4,7 +4,7 @@
 
 | Limitation | Details |
 |---|---|
-| **Codex CLI: no terminal focus** | Codex sessions use JSONL log polling which doesn't carry terminal PID info. Clicking Clawd won't jump to the Codex terminal. Claude Code and Copilot CLI work fine. |
+| **Codex CLI: no terminal focus** | ~~Codex sessions use JSONL log polling which doesn't carry terminal PID info.~~ Codex terminal focus now works via process tree walk from `codex.exe`/`codex` PID to parent terminal. |
 | **Codex CLI: Windows hooks disabled** | Codex hardcodes hooks off on Windows, so we poll log files instead. This means ~1.5s latency vs near-instant for hook-based agents. |
 | **Copilot CLI: auto-registered hooks** | Copilot hooks are now auto-registered on launch (like Claude Code, Gemini, Cursor). The manual setup guide (`docs/copilot-setup.md`) is still available as a fallback. |
 | **Copilot CLI: no permission bubble** | Copilot's `preToolUse` hook only supports deny, not the full allow/deny flow. Permission bubbles only work with Claude Code. |
@@ -24,6 +24,6 @@
 | **macOS/Linux packaged auto-update** | DMG/AppImage/deb installs cannot auto-update — use `git clone` + `npm start` for auto-update via `git pull`, or download new versions manually from GitHub Releases. |
 | **No test framework for Electron** | Unit tests cover agents and log polling, but the Electron main process (state machine, windows, tray) has no automated tests. |
 | **Claude Code: tools rejected when Clawd is offline** | When Clawd's HTTP server isn't running, the `PermissionRequest` hook (registered by Clawd) fails with `ECONNREFUSED`, and Claude Code currently denies the tool call instead of falling through to its built-in prompt — affecting `Edit`, `Write`, `Bash`, etc. This contradicts CC's documented non-blocking behavior for HTTP hook failures — see [anthropics/claude-code#46193](https://github.com/anthropics/claude-code/issues/46193). Workaround: keep Clawd running (recommended), or temporarily rename the `PermissionRequest` key in `~/.claude/settings.json` to disable the hook. |
-| **Settings panel: no theme preview** | Theme selection shows only the theme name, not an animated preview. Users must apply a theme to see how it looks. |
-| **Settings panel: no hotkey customization** | Permission bubble hotkeys (Ctrl+Shift+Y/N) are hardcoded and cannot be remapped. |
+| **Settings panel: no theme preview** | ~~Theme selection shows only the theme name, not an animated preview.~~ Theme cards now show the idle SVG as a preview image. |
+| **Settings panel: no hotkey customization** | ~~Permission bubble hotkeys (Ctrl+Shift+Y/N) are hardcoded and cannot be remapped.~~ Hotkeys can now be customized in the Shortcuts tab of settings. |
 | **No uninstall script** | ~~No automated script to remove hooks~~ — use `npm run uninstall` to remove Clawd hooks from all agent configs (Claude Code, Copilot, Cursor, Gemini, Kiro, opencode). |
